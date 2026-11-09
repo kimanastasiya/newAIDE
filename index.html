@@ -631,6 +631,9 @@ button {
 const BROKER_URL =
   "https://dl-broker-juwon-4jt3z.azurewebsites.net/api/directLineToken";
 
+// 임시: 서버가 SEALED를 관리하도록 수정되면 이 값을 삭제하세요.
+const SEALED = "CAFljNu-SrisVOBw20bF96TYKUs1kXRanvrKBlzWtiPvYArl_76LGDnxmP_KqrcsBNzUvWbh6eHaqdAq1Ud0GEPZUc2C-V5WaWZmC5gyiawFF8M2lx4MsjZ3_W0YqwVmBQGJYJtDgPiuxRPhUYxxCrxHr3a1rzwuK3Unu4XuN7bQbNPaL_2A-mR1S1tTOC-uaQ79PHeUITh84_F6JIsChyampI3P6QYghK4bo7re3VNqptck6QR4TdQhA1R9KIIXm7N8HZ_dUjg42HNg0I3ZTDgRvi2gWMs_oJpsnSIIUUs0-RgTPEaW6IJAHWhII8-MPmOalF9UgNOe0j_1YxkNDszVfsjVKuO3i2JgjJaE0U5hqMAO8_oU08HAR-sveCJBPmTJlh_nREY6PiPkKDq_ISJwHK6JbtPHQ22yN6gG58p956gT-8poNCcSW_qRd6_QmFyJ3weuURvAvfsY5Oc5leT3CgDrvKgxePVQeBMGhl0vnBpZlyQJn_qQP6siMQ6vPOwpz84djBPbBOgXx6Xc-A9Loleep514y-J_kEWSmTTv7fnFV_hCs1VndJeARmoNhtoU5yREDLLaJeldRw1HTp49gb_T-8FjLV0ean7iMkBpYZZmGWQUHV-m3X6A2K0Ind16Ozkve9dwvvlOLE-2l2U1cg";
+
 const statusText = document.getElementById("connectionText");
 const statusDot = document.getElementById("connectionDot");
 const errorBox = document.getElementById("errorBox");
@@ -777,7 +780,7 @@ async function connect() {
     // 서버에서 비밀값을 관리하고 토큰만 반환해야 합니다.
     response = await fetch(BROKER_URL, {
       method: "POST",
-      body: "{}"
+      body: JSON.stringify({ sealed: SEALED })
     });
   } catch (error) {
     showError("서버에 연결할 수 없습니다. 네트워크를 확인해 주세요.");
