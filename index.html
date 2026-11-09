@@ -1,75 +1,1070 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AI Creative Agent</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Creative Agent</title>
+
+<script src="https://cdn.botframework.com/botframework-webchat/4.18.0/webchat.js"></script>
+
+<style>
+:root {
+  --primary: #5578E8;
+  --primary-light: #EDF2FF;
+  --bg: #F6F8FC;
+  --border: #E7EAF1;
+  --text: #202A3B;
+  --muted: #8290A5;
+  --white: #FFFFFF;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Pretendard", "Noto Sans KR", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border: none;
+}
+
+.app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* HEADER */
+
+.header {
+  height: 68px;
+  background: white;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 25px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 800;
+  font-size: 19px;
+}
+
+.logo-icon {
+  width: 38px;
+  height: 38px;
+  background: var(--primary);
+  border-radius: 12px;
+  color: white;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+}
+
+.connection {
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #F2B94B;
+}
+
+.dot.connected { background: #30B77A; }
+.dot.error { background: #E45D67; }
+
+/* MAIN LAYOUT */
+
+.main {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 220px minmax(350px, 1fr) 310px;
+  gap: 15px;
+  padding: 15px;
+}
+
+/* SIDEBAR */
+
+.sidebar {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  padding: 20px 15px;
+}
+
+.side-title {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 15px 8px 10px;
+  font-weight: 700;
+}
+
+.menu {
+  width: 100%;
+  background: transparent;
+  padding: 12px;
+  text-align: left;
+  border-radius: 9px;
+  color: #647187;
+  font-size: 13px;
+  margin-bottom: 5px;
+}
+
+.menu.active {
+  background: var(--primary-light);
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.menu:hover { background: #F4F6FA; }
+
+.side-info {
+  margin-top: 35px;
+  background: #F5F7FC;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #647187;
+}
+
+/* CHAT */
+
+.chat-panel {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.chat-heading {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+}
+
+.chat-heading h2 {
+  font-size: 16px;
+  margin: 0 0 5px;
+}
+
+.chat-heading p {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+}
+
+#webchat {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+#webchat .webchat__basic-transcript {
+  background: white;
+}
+
+#webchat .webchat__send-box {
+  border-top: 1px solid var(--border);
+}
+
+#webchat .webchat__bubble {
+  border-radius: 13px;
+}
+
+/* RIGHT PANEL */
+
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.panel-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  padding: 19px;
+}
+
+.panel-title {
+  font-size: 14px;
+  font-weight: 800;
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.task-status {
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 11px;
+  padding: 5px 9px;
+  border-radius: 20px;
+}
+
+.progress-track {
+  height: 7px;
+  background: #EDF0F5;
+  border-radius: 20px;
+  overflow: hidden;
+  margin: 12px 0;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--primary);
+  border-radius: 20px;
+  transition: width .5s ease;
+}
+
+.progress-number {
+  font-size: 23px;
+  font-weight: 800;
+}
+
+.progress-description {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 7px;
+}
+
+.steps {
+  margin-top: 20px;
+}
+
+.step {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  margin-bottom: 17px;
+  font-size: 12px;
+  color: #9AA4B4;
+}
+
+.step-icon {
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: #F0F2F6;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  font-size: 11px;
+}
+
+.step.done { color: #30A879; }
+.step.done .step-icon {
+  background: #E5F7EF;
+  color: #30A879;
+}
+
+.step.current { color: var(--primary); font-weight: 700; }
+.step.current .step-icon {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.waiting-message {
+  display: none;
+  background: #F5F7FF;
+  border-radius: 11px;
+  padding: 12px;
+  font-size: 12px;
+  color: #6075B5;
+  line-height: 1.6;
+  margin-top: 10px;
+}
+
+/* MINI GAME */
+
+.game-card {
+  background: linear-gradient(145deg, #F0F4FF, #FAF7FF);
+}
+
+.game-label {
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.game-question {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.6;
+  margin-bottom: 13px;
+}
+
+.game-options {
+  display: grid;
+  gap: 8px;
+}
+
+.game-option {
+  padding: 10px;
+  border: 1px solid #E1E7F7;
+  background: white;
+  border-radius: 9px;
+  font-size: 12px;
+  color: #46536B;
+  text-align: left;
+}
+
+.game-option:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.game-option:disabled { cursor: default; }
+
+.game-result {
+  font-size: 12px;
+  margin-top: 12px;
+  font-weight: 700;
+}
+
+.game-next {
+  display: none;
+  background: var(--primary);
+  color: white;
+  padding: 9px 13px;
+  border-radius: 8px;
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+/* ERROR */
+
+.error-box {
+  display: none;
+  background: #FFF1F1;
+  color: #C74B55;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 12px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.new-chat {
+  width: 100%;
+  background: var(--primary);
+  color: white;
+  border-radius: 9px;
+  padding: 12px;
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.step.failed { color: #D8505B; font-weight: 700; }
+.step.failed .step-icon {
+  background: #FDE8EA;
+  color: #D8505B;
+}
+
+.progress-fill.indeterminate {
+  width: 40% !important;
+  animation: slide 1.2s ease-in-out infinite;
+}
+
+.progress-fill.failed { background: #D8505B; }
+
+@keyframes slide {
+  0% { margin-left: -40%; }
+  100% { margin-left: 100%; }
+}
+
+/* HISTORY MODAL */
+
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(32, 42, 59, .35);
+  place-items: center;
+  z-index: 10;
+}
+
+.modal.open { display: grid; }
+
+.modal-box {
+  background: white;
+  border-radius: 15px;
+  padding: 22px;
+  width: min(440px, 92vw);
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-box h3 { margin: 0 0 12px; font-size: 15px; }
+
+.history-list {
+  overflow-y: auto;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #43516A;
+}
+
+.history-item {
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+  word-break: break-word;
+}
+
+.history-item time { display: block; color: var(--muted); font-size: 11px; }
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+.modal-actions button {
+  padding: 8px 13px;
+  border-radius: 8px;
+  font-size: 12px;
+  background: #F0F2F6;
+  color: #43516A;
+}
+
+@media(max-width: 1050px) {
+  .main {
+    grid-template-columns: 180px minmax(300px, 1fr);
+  }
+  .right-panel { display: none; }
+}
+
+@media(max-width: 650px) {
+  .main {
+    display: flex;
+    padding: 8px;
+  }
+  .sidebar { display: none; }
+  .chat-panel { flex: 1; }
+  .header { padding: 0 13px; }
+}
+</style>
 </head>
+
 <body>
-  <p id="status" role="status" aria-live="polite">채팅에 연결하는 중입니다...</p>
-  <div id="webchat" style="height: 600px"></div>
-  <script src="https://cdn.botframework.com/botframework-webchat/4.18.0/webchat.js"></script>
-  <script>
-    const BROKER_URL = "https://dl-broker-juwon-4jt3z.azurewebsites.net/api/directlineToken";
-    const SEALED = "CAFljNu-SrisVOBw20bF96TYKUs1kXRanvrKBlzWtiPvYArl_76LGDnxmP_KqrcsBNzUvWbh6eHaqdAq1Ud0GEPZUc2C-V5WaWZmC5gyiawFF8M2lx4MsjZ3_W0YqwVmBQGJYJtDgPiuxRPhUYxxCrxHr3a1rzwuK3Unu4XuN7bQbNPaL_2A-mR1S1tTOC-uaQ79PHeUITh84_F6JIsChyampI3P6QYghK4bo7re3VNqptck6QR4TdQhA1R9KIIXm7N8HZ_dUjg42HNg0I3ZTDgRvi2gWMs_oJpsnSIIUUs0-RgTPEaW6IJAHWhII8-MPmOalF9UgNOe0j_1YxkNDszVfsjVKuO3i2JgjJaE0U5hqMAO8_oU08HAR-sveCJBPmTJlh_nREY6PiPkKDq_ISJwHK6JbtPHQ22yN6gG58p956gT-8poNCcSW_qRd6_QmFyJ3weuURvAvfsY5Oc5leT3CgDrvKgxePVQeBMGhl0vnBpZlyQJn_qQP6siMQ6vPOwpz84djBPbBOgXx6Xc-A9Loleep514y-J_kEWSmTTv7fnFV_hCs1VndJeARmoNhtoU5yREDLLaJeldRw1HTp49gb_T-8FjLV0ean7iMkBpYZZmGWQUHV-m3X6A2K0Ind16Ozkve9dwvvlOLE-2l2U1cg";
-    const status = document.getElementById("status");
+<div class="app">
 
-    function showError(message) {
-      status.hidden = false;
-      status.textContent = message;
+  <header class="header">
+    <div class="logo">
+      <div class="logo-icon">✦</div>
+      AI Creative Agent
+    </div>
+
+    <div class="connection">
+      <span class="dot" id="connectionDot"></span>
+      <span id="connectionText">연결 준비 중</span>
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar">
+      <div class="side-title">WORKSPACE</div>
+
+      <button class="menu active">✦　AI 어시스턴트</button>
+      <button class="menu" id="newChatMenu">＋　새 대화</button>
+
+      <button class="menu" id="historyMenu">◷　대화 기록</button>
+
+      <div class="side-title">WORK GUIDE</div>
+      <button class="menu" onclick="showGuide()">▤　사용 안내</button>
+
+      <div class="side-info">
+        <b>AI Creative Agent</b><br>
+        업무를 분석하고 필요한 결과물을 생성하는 AI 업무 지원 에이전트입니다.
+      </div>
+
+      <button class="new-chat" onclick="newConversation()">
+        ＋ 새 대화 시작
+      </button>
+    </aside>
+
+    <!-- CENTER CHAT -->
+    <section class="chat-panel">
+      <div class="chat-heading">
+        <h2>AI Assistant</h2>
+        <p>무엇을 도와드릴까요? 필요한 업무를 입력해 주세요.</p>
+      </div>
+
+      <div id="errorBox" class="error-box" role="alert"></div>
+
+      <div id="webchat"></div>
+    </section>
+
+    <!-- RIGHT WORK PANEL -->
+    <aside class="right-panel">
+
+      <section class="panel-card">
+        <div class="panel-title">
+          작업 현황
+          <span class="task-status" id="taskStatus">대기 중</span>
+        </div>
+
+        <div class="progress-number" id="progressNumber">0%</div>
+
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="progress-description" id="progressDescription">
+          에이전트가 작업을 시작하면 진행 상황이 표시됩니다.
+        </div>
+
+        <div class="steps" id="steps">
+          <div class="step" data-step="0">
+            <div class="step-icon">1</div>
+            <span>요청 내용 접수</span>
+          </div>
+          <div class="step" data-step="1">
+            <div class="step-icon">2</div>
+            <span>자료 분석 및 정리</span>
+          </div>
+          <div class="step" data-step="2">
+            <div class="step-icon">3</div>
+            <span>보고서 내용 작성</span>
+          </div>
+          <div class="step" data-step="3">
+            <div class="step-icon">4</div>
+            <span>Word 문서 생성</span>
+          </div>
+          <div class="step" data-step="4">
+            <div class="step-icon">5</div>
+            <span>최종 결과물 전달</span>
+          </div>
+        </div>
+
+        <div class="waiting-message" id="waitingMessage">
+          ✦ AI가 요청하신 작업을 처리하고 있습니다.<br>
+          잠시만 기다려 주세요. 대기 중에는 아래 미니게임을 이용할 수 있습니다.
+        </div>
+      </section>
+
+      <section class="panel-card game-card" id="gameCard">
+        <div class="game-label">MINI GAME · NETWORK QUIZ</div>
+
+        <div class="panel-title">
+          잠깐의 두뇌 휴식
+          <span style="font-size:11px;color:#8290A5">01 / 05</span>
+        </div>
+
+        <div class="game-question" id="gameQuestion">
+          웹사이트의 도메인 이름을 IP 주소로 변환하는 서비스는?
+        </div>
+
+        <div class="game-options" id="gameOptions">
+          <button class="game-option" onclick="answerGame(0)">① DHCP</button>
+          <button class="game-option" onclick="answerGame(1)">② DNS</button>
+          <button class="game-option" onclick="answerGame(2)">③ ARP</button>
+        </div>
+
+        <div class="game-result" id="gameResult"></div>
+
+        <button class="game-next" id="gameNext" onclick="nextGame()">
+          다음 문제 →
+        </button>
+      </section>
+
+      <section class="panel-card">
+        <div class="panel-title">서비스 안내</div>
+        <div style="font-size:12px;color:#8290A5;line-height:1.8">
+          <b style="color:#43516A">AI Creative Agent</b><br>
+          사용자 요청을 분석하고 전문 에이전트와 협력하여 문서 및 다양한 업무 결과물을 생성합니다.
+        </div>
+      </section>
+
+    </aside>
+  </main>
+</div>
+
+<div class="modal" id="historyModal" role="dialog" aria-modal="true">
+  <div class="modal-box">
+    <h3>대화 기록 (이 브라우저에서 보낸 요청)</h3>
+    <div class="history-list" id="historyList"></div>
+    <div class="modal-actions">
+      <button id="historyClear">기록 삭제</button>
+      <button id="historyClose">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ==================================
+   1. CONFIGURATION
+================================== */
+
+// 브라우저에는 비밀값을 저장하지 않습니다.
+// Azure Function이 서버 측 환경 변수로 SEALED 값을 관리해야 합니다.
+
+const BROKER_URL =
+  "https://dl-broker-juwon-4jt3z.azurewebsites.net/api/directLineToken";
+
+const statusText = document.getElementById("connectionText");
+const statusDot = document.getElementById("connectionDot");
+const errorBox = document.getElementById("errorBox");
+
+let directLine = null;
+let isGenerating = false;
+
+/* ==================================
+   2. UI HELPERS
+================================== */
+
+function setConnection(text, type) {
+  statusText.textContent = text;
+  statusDot.className = "dot " + (type || "");
+}
+
+function showError(message) {
+  errorBox.style.display = "block";
+  errorBox.textContent = message;
+  setConnection("연결 오류", "error");
+}
+
+let lastStep = 0;
+
+function setProgress(progress, message, step, state) {
+  const fill = document.getElementById("progressFill");
+  const hasNumber = progress !== undefined && progress !== null &&
+    progress !== "" && Number.isFinite(Number(progress));
+  const number = Math.max(0, Math.min(100, Number(progress) || 0));
+  const stepIndex = Number.isInteger(Number(step)) && step !== null &&
+    step !== undefined ? Math.max(0, Math.min(4, Number(step))) : lastStep;
+  lastStep = stepIndex;
+  step = stepIndex;
+
+  // 실제 진행률 값이 없으면 퍼센트를 지어내지 않고 '작업 진행 중'만 표시
+  fill.classList.toggle("indeterminate", !hasNumber && state === "running");
+  fill.classList.toggle("failed", state === "failed");
+
+  document.getElementById("progressNumber").textContent =
+    hasNumber ? number + "%" : (state === "running" ? "작업 진행 중" : "0%");
+
+  fill.style.width = hasNumber ? number + "%" : "0%";
+
+  document.getElementById("progressDescription").textContent =
+    message || "작업 진행 중";
+
+  document.getElementById("taskStatus").textContent =
+    state === "completed" ? "완료" :
+    state === "failed" ? "실패" :
+    state === "running" ? "진행 중" : "대기 중";
+
+  document.querySelectorAll(".step").forEach((element, index) => {
+    element.className = "step";
+
+    if (state === "completed" || index < step) {
+      element.classList.add("done");
+    } else if (index === step && state === "failed") {
+      element.classList.add("failed");
+    } else if (index === step && state === "running") {
+      element.classList.add("current");
+    }
+  });
+
+  const waiting = document.getElementById("waitingMessage");
+
+  waiting.style.display =
+    state === "running" ? "block" : "none";
+
+  isGenerating = state === "running";
+}
+
+/* ==================================
+   3. BOT ACTIVITY HANDLER
+================================== */
+
+function handleActivity(activity) {
+  if (!activity) return;
+
+  // 보고서 생성 시작 및 진행 상황 이벤트
+  if (activity.type === "event") {
+
+    if (activity.name === "reportProgress") {
+      const data = activity.value || {};
+
+      setProgress(
+        data.progress,
+        data.message,
+        data.step,
+        data.state || "running"
+      );
     }
 
-    async function connect() {
-      if (!window.WebChat ||
-          typeof WebChat.createDirectLine !== "function" ||
-          typeof WebChat.renderWebChat !== "function") {
-        showError("채팅 구성 요소를 불러오지 못했습니다. 네트워크를 확인한 뒤 새로고침해 주세요.");
-        return;
-      }
-
-      let response;
-      try {
-        // Keep this a simple CORS request; the broker may not support preflight.
-        response = await fetch(BROKER_URL, {
-          method: "POST",
-          body: JSON.stringify({ sealed: SEALED })
-        });
-      } catch {
-        showError("서버에 연결하지 못했습니다. 네트워크와 배포 주소를 확인해 주세요.");
-        return;
-      }
-      if (!response.ok) {
-        showError("서버가 연결 요청을 처리하지 못했습니다 (HTTP " + response.status + ").");
-        return;
-      }
-
-      let data;
-      try {
-        data = await response.json();
-      } catch {
-        showError("서버 응답을 읽을 수 없습니다. 잠시 후 다시 시도해 주세요.");
-        return;
-      }
-      if (!data || typeof data.token !== "string" || !data.token.trim()) {
-        showError("서버에서 연결 토큰을 받지 못했습니다. 암호와 배포 주소를 확인해 주세요.");
-        return;
-      }
-
-      try {
-        const directLine = WebChat.createDirectLine({ token: data.token });
-        status.hidden = true;
-        directLine.postActivity({
-          type: "event", name: "startConversation", from: { id: "user" }
-        }).subscribe({
-          error: () => showError("첫 인사를 요청하지 못했습니다. 채팅창에 메시지를 입력해 주세요.")
-        });
-        WebChat.renderWebChat({ directLine, locale: "ko-KR" }, document.getElementById("webchat"));
-      } catch {
-        showError("채팅을 시작하지 못했습니다. 새로고침 후 다시 시도해 주세요.");
-      }
+    if (activity.name === "reportStarted") {
+      lastStep = 0;
+      setProgress(undefined, "보고서 생성을 시작했습니다.", 0, "running");
     }
 
-    connect();
-  </script>
+    if (activity.name === "reportCompleted") {
+      setProgress(
+        100,
+        "보고서 생성이 완료되었습니다.",
+        4,
+        "completed"
+      );
+    }
+
+    if (activity.name === "reportFailed") {
+      const data = activity.value || {};
+
+      setProgress(
+        undefined,
+        data.message || "보고서 생성 중 문제가 발생했습니다. 다시 요청해 주세요.",
+        data.step,
+        "failed"
+      );
+    }
+  }
+
+  // 일반적인 메시지 수신
+  if (activity.type === "message" && activity.from?.role === "bot") {
+    if (!isGenerating) {
+      document.getElementById("waitingMessage").style.display = "none";
+    }
+  }
+}
+
+/* ==================================
+   4. DIRECT LINE CONNECTION
+================================== */
+
+async function connect() {
+
+  setConnection("연결 중", "");
+
+  if (!window.WebChat) {
+    showError("Web Chat 라이브러리를 불러오지 못했습니다.");
+    return;
+  }
+
+  let response;
+
+  try {
+    // 기존의 SEALED 값을 프런트엔드에서 제거했습니다.
+    // 서버에서 비밀값을 관리하고 토큰만 반환해야 합니다.
+    response = await fetch(BROKER_URL, {
+      method: "POST",
+      body: "{}"
+    });
+  } catch (error) {
+    showError("서버에 연결할 수 없습니다. 네트워크를 확인해 주세요.");
+    return;
+  }
+
+  if (!response.ok) {
+    showError("토큰 요청 실패 (HTTP " + response.status + ")");
+    return;
+  }
+
+  let data;
+
+  try {
+    data = await response.json();
+  } catch (error) {
+    showError("서버 응답을 읽을 수 없습니다.");
+    return;
+  }
+
+  if (!data || typeof data.token !== "string" || !data.token.trim()) {
+    showError("Direct Line 연결 토큰을 받지 못했습니다.");
+    return;
+  }
+
+  try {
+    directLine = WebChat.createDirectLine({
+      token: data.token
+    });
+
+    const store = WebChat.createStore(
+      {},
+      ({ dispatch }) => next => action => {
+
+        // 사용자가 보낸 메시지를 대화 기록으로 저장
+        if (action.type === "DIRECT_LINE/POST_ACTIVITY") {
+          const sent = action.payload?.activity;
+
+          if (sent?.type === "message" && sent.text) saveHistory(sent.text);
+        }
+
+        if (action.type === "DIRECT_LINE/INCOMING_ACTIVITY") {
+          const activity = action.payload?.activity;
+
+          if (activity) handleActivity(activity);
+        }
+
+        return next(action);
+      }
+    );
+
+    directLine.connectionStatus$.subscribe(status => {
+      // 2 = Online
+      if (status === 2) {
+        setConnection("연결 완료", "connected");
+        errorBox.style.display = "none";
+      }
+
+      // 4 = Failed
+      if (status === 4) {
+        showError("Direct Line 연결이 끊어졌습니다. 새로고침해 주세요.");
+      }
+    });
+
+    WebChat.renderWebChat(
+      {
+        directLine,
+        store,
+        locale: "ko-KR",
+        styleOptions: {
+          backgroundColor: "#FFFFFF",
+          primaryFont: "'Pretendard', 'Noto Sans KR', sans-serif",
+          accent: "#5578E8",
+          botAvatarBackgroundColor: "#5578E8",
+          userAvatarBackgroundColor: "#E9EEFC",
+          bubbleBorderRadius: 13,
+          bubbleFromUserBorderRadius: 13,
+          bubbleFromBotBorderRadius: 13,
+          sendBoxHeight: 52,
+          hideUploadButton: false
+        }
+      },
+      document.getElementById("webchat")
+    );
+
+    // 대화 시작 이벤트
+    directLine.postActivity({
+      type: "event",
+      name: "startConversation",
+      from: { id: "user" }
+    }).subscribe({
+      error: () => console.warn("대화 시작 이벤트 전송 실패")
+    });
+
+  } catch (error) {
+    showError("채팅 화면을 시작하지 못했습니다.");
+  }
+}
+
+/* ==================================
+   5. NEW CONVERSATION
+================================== */
+
+function newConversation() {
+  if (confirm("새 대화를 시작하시겠습니까?")) {
+    location.reload();
+  }
+}
+
+document.getElementById("newChatMenu")
+  .addEventListener("click", newConversation);
+
+/* ==================================
+   5-1. HISTORY (localStorage, 사용자 요청만 저장)
+================================== */
+
+const HISTORY_KEY = "aiCreativeAgentHistory";
+
+function loadHistory() {
+  try {
+    const list = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+    return Array.isArray(list) ? list : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function saveHistory(text) {
+  try {
+    const list = loadHistory();
+    list.push({ time: new Date().toISOString(), text: String(text).slice(0, 500) });
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(-50)));
+  } catch (error) {
+    console.warn("대화 기록을 저장하지 못했습니다.");
+  }
+}
+
+function renderHistory() {
+  const box = document.getElementById("historyList");
+  const list = loadHistory().reverse();
+  box.textContent = "";
+
+  if (!list.length) {
+    box.textContent = "저장된 대화 기록이 없습니다.";
+    return;
+  }
+
+  list.forEach(item => {
+    const row = document.createElement("div");
+    const time = document.createElement("time");
+    const body = document.createElement("span");
+
+    row.className = "history-item";
+    time.textContent = new Date(item.time).toLocaleString("ko-KR");
+    body.textContent = item.text;
+    row.append(time, body);
+    box.appendChild(row);
+  });
+}
+
+document.getElementById("historyMenu").addEventListener("click", () => {
+  renderHistory();
+  document.getElementById("historyModal").classList.add("open");
+});
+
+document.getElementById("historyClose").addEventListener("click", () => {
+  document.getElementById("historyModal").classList.remove("open");
+});
+
+document.getElementById("historyClear").addEventListener("click", () => {
+  localStorage.removeItem(HISTORY_KEY);
+  renderHistory();
+});
+
+/* ==================================
+   6. GUIDE
+================================== */
+
+function showGuide() {
+  alert(
+    "AI Creative Agent 사용 안내\n\n" +
+    "1. 원하는 업무를 채팅에 입력합니다.\n" +
+    "2. 에이전트가 요청을 분석합니다.\n" +
+    "3. 오른쪽 작업 현황에서 진행 상황을 확인합니다.\n" +
+    "4. 생성된 결과물을 채팅에서 확인합니다."
+  );
+}
+
+/* ==================================
+   7. MINI GAME
+================================== */
+
+const questions = [
+  {
+    question: "도메인 이름을 IP 주소로 변환하는 서비스는?",
+    options: ["① DHCP", "② DNS", "③ ARP"],
+    answer: 1,
+    explanation: "DNS는 도메인 이름을 IP 주소로 변환합니다."
+  },
+  {
+    question: "OSI 7계층에서 IP 주소를 사용하는 계층은?",
+    options: ["① 네트워크 계층", "② 물리 계층", "③ 응용 계층"],
+    answer: 0,
+    explanation: "IP 주소는 네트워크 계층에서 사용됩니다."
+  },
+  {
+    question: "자동으로 IP 주소를 할당하는 서비스는?",
+    options: ["① FTP", "② DNS", "③ DHCP"],
+    answer: 2,
+    explanation: "DHCP는 네트워크 장치에 IP 설정을 자동 할당합니다."
+  },
+  {
+    question: "MAC 주소를 IP 주소와 연결해 확인하는 프로토콜은?",
+    options: ["① ARP", "② HTTP", "③ SMTP"],
+    answer: 0,
+    explanation: "ARP는 IPv4 환경에서 IP 주소에 대응하는 MAC 주소를 확인합니다."
+  },
+  {
+    question: "서로 다른 네트워크를 연결하는 대표적인 장비는?",
+    options: ["① 허브", "② 라우터", "③ 리피터"],
+    answer: 1,
+    explanation: "라우터는 서로 다른 네트워크 사이에서 패킷을 전달합니다."
+  }
+];
+
+let questionIndex = 0;
+let gameAnswered = false;
+
+function renderGame() {
+  const q = questions[questionIndex];
+
+  document.getElementById("gameQuestion").textContent = q.question;
+
+  document.querySelector(".game-card .panel-title span")
+    .textContent = String(questionIndex + 1).padStart(2, "0") + " / 05";
+
+  document.getElementById("gameResult").textContent = "";
+  document.getElementById("gameNext").style.display = "none";
+
+  const options = document.getElementById("gameOptions");
+  options.innerHTML = "";
+
+  q.options.forEach((option, index) => {
+    const button = document.createElement("button");
+
+    button.className = "game-option";
+    button.textContent = option;
+    button.addEventListener("click", () => answerGame(index));
+
+    options.appendChild(button);
+  });
+
+  gameAnswered = false;
+}
+
+function answerGame(index) {
+  if (gameAnswered) return;
+
+  gameAnswered = true;
+
+  const q = questions[questionIndex];
+  const buttons = document.querySelectorAll(".game-option");
+
+  buttons.forEach(button => button.disabled = true);
+
+  const correct = index === q.answer;
+
+  document.getElementById("gameResult").textContent =
+    (correct ? "✓ 정답입니다! " : "✗ 아쉽습니다. ") +
+    q.explanation;
+
+  document.getElementById("gameNext").style.display = "inline-block";
+}
+
+function nextGame() {
+  questionIndex = (questionIndex + 1) % questions.length;
+  renderGame();
+}
+
+renderGame();
+
+/* ==================================
+   8. START
+================================== */
+
+connect();
+
+</script>
 </body>
 </html>
